@@ -14,22 +14,28 @@ num_results = 5
 while True:
     search_query = input("Enter search query (the core concept you're interested in): ")
     chat_query = input("Enter chat query (the question you want to ask the model): ")
+
     if search_query.lower() == 'exit' or chat_query.lower() == 'exit':
         break
+
     try:
-        # Retrieve top 3 documents from the index most related to the search_query
+        # Retrieve top 5 documents from the index most related to the search_query
         docs = faiss_index.similarity_search(search_query, k=num_results)
         docs_text = "\n".join([page.page_content for i, page in enumerate(docs)])
 
-        # Create messages for the chat model
-        messages = [
-            {"role": "system", "content": f"You are a helpful assistant that knows a lot about:\n{docs_text}"},
-            {"role": "user", "content": chat_query}
-        ]
+        if chat_query:
+            # Create messages for the chat model
+            messages = [
+                {"role": "system", "content": f"You are a helpful assistant that knows a lot about:\n{docs_text}"},
+                {"role": "user", "content": chat_query}
+            ]
 
-        # Call OpenAI's chat model
-        response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+            # Call OpenAI's chat model
+            response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
 
-        print("Response: ", response.choices[0].message.content)
+            print("Response: ", response.choices[0].message.content)
+        else:
+            print("Relevant Document Contents: ", docs_text)
+
     except Exception as e:
         logging.error(f"Error processing queries. Search query: {search_query}, chat query: {chat_query}. Error: {str(e)}")
